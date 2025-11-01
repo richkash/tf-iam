@@ -74,11 +74,5 @@ jobs:
           # Terraform plan
             terraform -chdir=${TF_ENV_DIR} plan
 
-      - name: Terraform Apply
-        run: |
-          TF_ENV_DIR="iam/${TF_ENV}-group"
-          TF_BACKEND_KEY="iam/${TF_ENV}-group/terraform.tfstate"
-          terraform -chdir=$TF_ENV_DIR init \
-            -backend-config="bucket=${{ TF_BACKEND_BUCKET }}" \
-            -backend-config="key=$TF_BACKEND_KEY"
-          terraform -chdir=${TF_ENV_DIR} apply -auto-approve
+          # Terraform plan
+            terraform -chdir=${TF_ENV_DIR} apply -auto-approve
