@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     aws = {
-        source = "hashicorp/aws"
-        version = "~>5.0"
+      source  = "hashicorp/aws"
+      version = "~>5.0"
     }
   }
 }
@@ -31,8 +31,8 @@ resource "aws_iam_account_password_policy" "default" {
 # ------------------------------------------------------------
 
 resource "aws_iam_user" "github_actions_user" {
-  name = "github-actions-user"
-  path = "/"
+  name          = "github-actions-user"
+  path          = "/"
   force_destroy = false
   tags = {
     "CreatedBy" = "Terraform"
@@ -57,13 +57,13 @@ resource "aws_iam_policy" "github_actions_ci_policy" {
   name        = "GitHubActionsCIPolicy"
   description = "Custom policy for GitHub Actions CI/CD user"
   path        = "/"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "ECRPushPull"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "ECRPushPull"
+        Effect = "Allow"
+        Action = [
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
@@ -74,9 +74,9 @@ resource "aws_iam_policy" "github_actions_ci_policy" {
         Resource = "*"
       },
       {
-        Sid      = "ECSDeploy"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "ECSDeploy"
+        Effect = "Allow"
+        Action = [
           "ecs:RegisterTaskDefinition",
           "ecs:UpdateService",
           "ecs:DescribeServices",
@@ -86,9 +86,9 @@ resource "aws_iam_policy" "github_actions_ci_policy" {
         Resource = "*"
       },
       {
-        Sid      = "IAMReadOnly"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "IAMReadOnly"
+        Effect = "Allow"
+        Action = [
           "iam:ListRoles",
           "iam:GetRole",
           "iam:ListAttachedRolePolicies",

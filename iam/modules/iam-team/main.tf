@@ -15,7 +15,7 @@ resource "aws_iam_policy" "dev_permission_boundary" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "LimitDevPermissions"
+        Sid    = "LimitDevPermissions"
         Effect = "Allow"
         Action = [
           "ecs:*",
@@ -38,9 +38,9 @@ resource "aws_iam_policy" "developers_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "ECRReadWrite"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "ECRReadWrite"
+        Effect = "Allow"
+        Action = [
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
@@ -51,9 +51,9 @@ resource "aws_iam_policy" "developers_policy" {
         Resource = "*"
       },
       {
-        Sid      = "ECSReadWrite"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "ECSReadWrite"
+        Effect = "Allow"
+        Action = [
           "ecs:RegisterTaskDefinition",
           "ecs:UpdateService",
           "ecs:DescribeServices",
@@ -62,9 +62,9 @@ resource "aws_iam_policy" "developers_policy" {
         Resource = "*"
       },
       {
-        Sid      = "SSMReadOnly"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "SSMReadOnly"
+        Effect = "Allow"
+        Action = [
           "ssm:GetParameter",
           "ssm:GetParameters",
           "ssm:DescribeParameters"
@@ -84,13 +84,13 @@ resource "aws_iam_group_policy_attachment" "developers_attach_policy" {
 # Create a Dev User
 resource "aws_iam_user" "dev_user1" {
   for_each = toset(var.users)
-  name = each.value
+  name     = each.value
 }
 
 # Add user to developers group
 resource "aws_iam_user_group_membership" "dev_user1_group" {
-  for_each =  aws_iam_user.dev_user1
-  user = each.value.name
+  for_each = aws_iam_user.dev_user1
+  user     = each.value.name
   groups = [
     aws_iam_group.developers.name
   ]
