@@ -1,0 +1,111 @@
+name: Terraform CI/CD
+
+on:
+  # pull_request:
+  #   branches:
+  #     - main
+  #   types: [opened, synchronize, reopened]
+
+  # push:
+  #   branches:
+  #     - main
+
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment to deploy'
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write   
+  contents: read    
+
+env:
+  AWS_REGION: us-east-1
+  TF_ENV: ${{ github.event.inputs.env || 'dev' }}
+  TF_BACKEND_BUCKET: iam-tf-ci-state
+
+jobs:
+  # -----------------------------
+  # PR Validation & Plan Job
+  # -----------------------------
+  validate-and-plan:
+    # if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: Validate & Plan Terraform
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::590183909166:role/terraform-oidc
+          aws-region: ${{ env.AWS_REGION }}  
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Plan
+        run: |
+          TF_ENV_DIR="iam/${TF_ENV}-group"
+          TF_BACKEND_KEY="${TF_ENV}/terraform.tfstate"   
+
+          # Terraform init     
+            terraform -chdir=${TF_ENV_DIR} init \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+            -backend-config="key=${TF_BACKEND_KEY}"
+
+          # Terraform validate
+            terraform -chdir=${TF_ENV_DIR} validate
+
+          # Terraform plan
+            terraform -chdir=${TF_ENV_DIR} plan
+
+
+
+  # -----------------------------
+  # Apply Job on Main
+  # -----------------------------
+  # apply:
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   name: Apply Terraform
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: ${{ github.event.inputs.env }}
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Configure AWS Credentials from IAM Role
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         role-to-assume: arn:aws:iam::590183909166:role/terraform-oidc
+  #         aws-region: ${{ env.AWS_REGION }}  
+
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: 1.8.5
+
+  #     - name: Terraform Apply
+  #       run: |
+  #         TF_ENV_DIR="environments/${TF_ENV}"
+  #         TF_BACKEND_KEY="environments/${TF_ENV}/${{ github.actor }}/terraform.tfstate"
+  #         terraform -chdir=$TF_ENV_DIR init \
+  #           -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" \
+  #           -backend-config="key=$TF_BACKEND_KEY"
+  #         terraform -chdir=${TF_ENV_DIR} apply -auto-approve
